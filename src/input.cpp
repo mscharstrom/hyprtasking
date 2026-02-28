@@ -1,7 +1,9 @@
 #include <linux/input-event-codes.h>
 
 #include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/layout/algorithm/Algorithm.hpp>
 #include <hyprland/src/layout/LayoutManager.hpp>
+#include <hyprland/src/layout/space/Space.hpp>
 #include <hyprland/src/macros.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
@@ -13,6 +15,8 @@
 
 static PHLWINDOW get_dragged_window() {
     if (!g_layoutManager)
+        return nullptr;
+    if (g_layoutManager->dragController()->mode() != MBIND_MOVE)
         return nullptr;
 
     const auto target = g_layoutManager->dragController()->target();
@@ -108,6 +112,15 @@ bool HTManager::end_window_drag() {
         return false;
     }
 
+    const bool was_dragging_tiled = g_layoutManager->dragController()->draggingTiled();
+    const auto dragged_target = g_layoutManager->dragController()->target();
+    const PHLWORKSPACE source_workspace = dragged_window->m_workspace;
+    if (source_workspace == nullptr) {
+        Log::logger->log(LOG, "[Hyprtasking] dragged window has null source workspace");
+        g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
+        return false;
+    }
+
     const Vector2D mouse_coords = g_pInputManager->getMouseCoordsInternal();
     Vector2D use_mouse_coords = mouse_coords;
     const WORKSPACEID workspace_id = cursor_view->layout->get_ws_id_from_global(mouse_coords);
@@ -117,7 +130,7 @@ bool HTManager::end_window_drag() {
     if (cursor_workspace == nullptr && workspace_id != WORKSPACE_INVALID) {
         cursor_workspace = g_pCompositor->createNewWorkspace(workspace_id, cursor_monitor->m_id);
     } else if (workspace_id == WORKSPACE_INVALID) {
-        cursor_workspace = dragged_window->m_workspace;
+        cursor_workspace = source_workspace;
         // Ensure that the mouse coords are snapped to inside the workspace box itself
         use_mouse_coords = cursor_view->layout->get_global_ws_box(cursor_workspace->m_id)
                                .closestPoint(use_mouse_coords);
@@ -135,12 +148,46 @@ bool HTManager::end_window_drag() {
         return false;
     }
 
-    Log::logger->log(LOG, "[Hyprtasking] trying to drop window on ws {}", cursor_workspace->m_id);
+    const bool moved_to_different_workspace = cursor_workspace != source_workspace;
+    const bool destination_had_tiled_targets =
+        moved_to_different_workspace && cursor_workspace->m_space != nullptr
+        && cursor_workspace->m_space->algorithm() != nullptr
+        && cursor_workspace->m_space->algorithm()->tiledTargets() > 0;
 
-    // PHLWORKSPACEREF o_workspace = cursor_monitor->m_activeWorkspace;
+    // End the drag before reassigning workspaces so the render loop can't
+    // draw a stale dragged-window preview against half-updated state.
+    if (g_layoutManager->dragController()->mode() == MBIND_MOVE) {
+        g_layoutManager->dragController()->dragEnd();
+    } else {
+        g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
+    }
+
+    Log::logger->log(
+        LOG,
+        "[Hyprtasking] drop start window={} source_ws={} target_ws={} monitor_active_ws={}",
+        (uintptr_t)dragged_window.get(),
+        source_workspace->m_id,
+        cursor_workspace->m_id,
+        cursor_monitor->m_activeWorkspace ? cursor_monitor->m_activeWorkspace->m_id : -1
+    );
+
+    if (moved_to_different_workspace) {
+        Log::logger->log(LOG, "[Hyprtasking] moving window to target workspace");
+        g_pCompositor->moveWindowToWorkspaceSafe(dragged_window, cursor_workspace);
+        Log::logger->log(
+            LOG,
+            "[Hyprtasking] move complete, window workspace is now {}",
+            dragged_window->m_workspace ? dragged_window->m_workspace->m_id : -1
+        );
+    }
+
+    Log::logger->log(LOG, "[Hyprtasking] switching monitor to target workspace");
     cursor_monitor->changeWorkspace(cursor_workspace, true);
-
-    g_pCompositor->moveWindowToWorkspaceSafe(dragged_window, cursor_workspace);
+    Log::logger->log(
+        LOG,
+        "[Hyprtasking] workspace switch complete, monitor active ws={}",
+        cursor_monitor->m_activeWorkspace ? cursor_monitor->m_activeWorkspace->m_id : -1
+    );
 
     const Vector2D workspace_coords =
         cursor_view->layout->global_to_local_ws_unscaled(use_mouse_coords, cursor_workspace->m_id)
@@ -156,13 +203,24 @@ bool HTManager::end_window_drag() {
     dragged_window->m_realPosition->setValueAndWarp(tp_pos);
 
     g_pPointerManager->warpTo(workspace_coords);
-    g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
     g_pPointerManager->warpTo(mouse_coords);
 
     // otherwise the window leaves blur (?) artifacts on all
     // workspaces
     dragged_window->m_movingToWorkspaceAlpha->setValueAndWarp(1.0);
     dragged_window->m_movingFromWorkspaceAlpha->setValueAndWarp(1.0);
+
+    if ((was_dragging_tiled || destination_had_tiled_targets) && dragged_target != nullptr
+        && cursor_workspace->m_space != nullptr && cursor_workspace->m_space->algorithm() != nullptr) {
+        Log::logger->log(
+            LOG,
+            "[Hyprtasking] forcing tiled state after workspace drop (dragged_tiled={} dest_had_tiled={})",
+            was_dragging_tiled,
+            destination_had_tiled_targets
+        );
+        cursor_workspace->m_space->algorithm()->setFloating(dragged_target, false, false);
+        cursor_workspace->m_space->recalculate();
+    }
 
     // if (o_workspace != nullptr)
     //     cursor_monitor->changeWorkspace(o_workspace.lock(), true);

@@ -7,6 +7,15 @@
 > - This fork supports Hyprland releases `v0.46.2-v0.54.0`.
 > - Hyprland `v0.54.0` compatibility is provided by this fork at `mscharstrom/hyprtasking`.
 
+> [!Note]
+> This repository is a personal fork used for development, testing, and local workflow changes.
+> It exists so changes can be iterated independently without affecting the original upstream project.
+> Behavior and feature set may differ from upstream at any time.
+
+> [!Warning]
+> This fork is intentionally opinionated and may contain workflow-specific behavior.
+> If you want the original project behavior, use the upstream repository instead of this fork.
+
 https://github.com/user-attachments/assets/8d6cdfd2-2b17-4240-a117-1dbd2231ed4e
 
 #### [Jump To Installation](#Installation)
@@ -38,6 +47,13 @@ https://github.com/user-attachments/assets/8d6cdfd2-2b17-4240-a117-1dbd2231ed4e
 - [ ] Overview layers
 
 ## Installation
+
+### Fork Notes
+
+- This fork is intended for personal and experimental use.
+- Releases, behavior, and compatibility may diverge from upstream.
+- Configuration examples in this README reflect this fork, not necessarily the original project.
+- If you are testing local changes, prefer loading the plugin directly from your local build output instead of relying on `hyprpm`.
 
 ### Hyprpm
 
@@ -93,6 +109,36 @@ Then use `hyprctl plugin load` to load the absolute path to the `.so` file:
 ```
 hyprctl plugin load "$(realpath libhyprtasking.so)"
 ```
+
+If you are developing this fork locally and want Hyprland to keep loading your local build across reloads/reboots, add this to your Hyprland config instead:
+
+```ini
+plugin = /absolute/path/to/build/libhyprtasking.so
+```
+
+and disable the `hyprpm`-managed copy so only one version is loaded.
+
+## Fork Differences
+
+Current notable differences in this fork:
+
+- Hyprland `v0.54.0` compatibility work is maintained here.
+- Drag preview behavior was adjusted for safer rendering on newer Hyprland versions.
+- Dragging windows between workspaces restores tiled state more aggressively than upstream.
+- Floating windows dropped onto a workspace that already contains tiled windows are converted into tiled windows.
+
+These details may continue to change as this fork is used for ongoing development.
+
+## Known Issues
+
+- Some application previews may still behave differently depending on how the client renders its surfaces.
+- Browser windows and other complex clients may require further preview/rendering adjustments as Hyprland internals evolve.
+- This fork prioritizes local workflow behavior over strict parity with upstream.
+
+## Development Notes
+
+- This fork is maintained primarily for local use and experimentation.
+- Parts of the development and debugging work in this fork were done with assistance from OpenAI Codex.
 
 ## Usage
 
@@ -193,6 +239,13 @@ plugin {
 - `hyprtasking:killhovered` behaves similarly to the standard `killactive` dispatcher with focus on hover
     - when dispatched, hyprtasking will the currently hovered window, useful when the overview is active.
     - this dispatcher is designed to **replace** killactive, it will work even when the overview is **not active**.
+
+Example conditional bind:
+
+```
+bind = $mod, S, hyprtasking:if_active, hyprtasking:killhovered
+bind = $mod, S, hyprtasking:if_not_active, killactive
+```
 
 ### Config Options
 

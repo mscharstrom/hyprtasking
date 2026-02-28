@@ -25,8 +25,13 @@ using Hyprutils::Utils::CScopeGuard;
 static PHLWINDOW get_dragged_window() {
     if (!g_layoutManager)
         return nullptr;
+    const auto& drag_controller = g_layoutManager->dragController();
+    if (drag_controller->mode() != MBIND_MOVE)
+        return nullptr;
+    if (!drag_controller->dragThresholdReached())
+        return nullptr;
 
-    const auto target = g_layoutManager->dragController()->target();
+    const auto target = drag_controller->target();
     return target ? target->window() : nullptr;
 }
 
@@ -465,10 +470,11 @@ void HTLayoutLinear::render() {
     if (dragged_window == nullptr)
         return;
     const Vector2D mouse_coords = g_pInputManager->getMouseCoordsInternal();
-    const CBox window_box = dragged_window->getWindowMainSurfaceBox()
-                                .translate(-mouse_coords)
-                                .scale(cursor_view->layout->drag_window_scale())
-                                .translate(mouse_coords);
-    if (!window_box.intersection(monitor->logicalBox()).empty())
-        render_window_at_box(dragged_window, monitor, time, window_box);
+    render_dragged_window_preview(
+        dragged_window,
+        monitor,
+        time,
+        mouse_coords,
+        cursor_view->layout->drag_window_scale()
+    );
 }
