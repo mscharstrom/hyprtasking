@@ -58,10 +58,15 @@ https://github.com/user-attachments/assets/8d6cdfd2-2b17-4240-a117-1dbd2231ed4e
 
 ### Hyprpm
 
+To install this fork specifically:
+
 ``` 
 hyprpm add https://github.com/mscharstrom/hyprtasking
 hyprpm enable hyprtasking
 ```
+
+This installs the `mscharstrom/hyprtasking` fork, not the upstream project.
+Behavior may differ from upstream.
 
 ### Nix
 
