@@ -1,21 +1,23 @@
 <div align="center">
   <h1>Hyprtasking</h1>
-  <p>Powerful workspace management plugin, packed with features.</p>
+  <p>Personal fork of the Hyprtasking workspace management plugin.</p>
 </div>
 
 > [!Important]
-> - This fork supports Hyprland releases `v0.46.2-v0.54.0`.
-> - Hyprland `v0.54.0` compatibility is provided by this fork at `mscharstrom/hyprtasking`.
+> - This repository is a personal fork of `raymondbian/hyprtasking`, maintained for local use and experimentation.
+> - Upstream project: https://github.com/raymondbian/hyprtasking
+> - This fork includes `hyprpm` commit pins for Hyprland releases `v0.46.2-v0.54.0`.
+> - Hyprland `v0.54.0` is verified working in this fork. Earlier pinned versions may still work, but they have not been re-verified here.
 > - This repository is a fork of `raymondbian/hyprtasking` and remains distributed under the BSD-3-Clause license. See [LICENSE](./LICENSE).
 
 > [!Note]
-> This repository is a personal fork used for development, testing, and local workflow changes.
-> It exists so changes can be iterated independently without affecting the original upstream project.
+> This repository exists so local workflow changes can be developed and tested without affecting the upstream project.
+> It should not be treated as the canonical source for Hyprtasking behavior, features, or compatibility claims.
 > Behavior and feature set may differ from upstream at any time.
 
 > [!Warning]
 > This fork is intentionally opinionated and may contain workflow-specific behavior.
-> If you want the original project behavior, use the upstream repository instead of this fork.
+> If you want the original project behavior, documentation, or support expectations, use the upstream repository instead of this fork.
 
 https://github.com/user-attachments/assets/8d6cdfd2-2b17-4240-a117-1dbd2231ed4e
 
@@ -52,11 +54,13 @@ https://github.com/user-attachments/assets/8d6cdfd2-2b17-4240-a117-1dbd2231ed4e
 ### Fork Notes
 
 - This fork is intended for personal and experimental use.
+- Upstream `raymondbian/hyprtasking` should be considered the primary project.
 - Releases, behavior, and compatibility may diverge from upstream.
 - Configuration examples in this README reflect this fork, not necessarily the original project.
+- The `hyprpm` pins in this repository are not a guarantee that every listed Hyprland version has been re-tested in this fork.
 - If you are testing local changes, prefer loading the plugin directly from your local build output instead of relying on `hyprpm`.
 
-### Hyprpm
+### Install This Fork with Hyprpm
 
 To install this fork specifically:
 
@@ -128,7 +132,7 @@ and disable the `hyprpm`-managed copy so only one version is loaded.
 
 Current notable differences in this fork:
 
-- Hyprland `v0.54.0` compatibility work is maintained here.
+- Hyprland `v0.54.0` compatibility has been verified here.
 - Drag preview behavior was adjusted for safer rendering on newer Hyprland versions.
 - Dragging windows between workspaces restores tiled state more aggressively than upstream.
 - Floating windows dropped onto a workspace that already contains tiled windows are converted into tiled windows.
@@ -144,6 +148,7 @@ These details may continue to change as this fork is used for ongoing developmen
 ## Development Notes
 
 - This fork is maintained primarily for local use and experimentation.
+- It is not intended to replace or speak for the upstream project.
 - Parts of the development and debugging work in this fork were done with assistance from OpenAI Codex.
 
 ## Usage
