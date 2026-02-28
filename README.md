@@ -4,7 +4,8 @@
 </div>
 
 > [!Important]
-> - Supports Hyprland release `v0.46.2-v0.52.1`.
+> - This fork supports Hyprland releases `v0.46.2-v0.54.0`.
+> - Hyprland `v0.54.0` compatibility is provided by this fork at `mscharstrom/hyprtasking`.
 
 https://github.com/user-attachments/assets/8d6cdfd2-2b17-4240-a117-1dbd2231ed4e
 
@@ -40,8 +41,8 @@ https://github.com/user-attachments/assets/8d6cdfd2-2b17-4240-a117-1dbd2231ed4e
 
 ### Hyprpm
 
-```
-hyprpm add https://github.com/raybbian/hyprtasking
+``` 
+hyprpm add https://github.com/mscharstrom/hyprtasking
 hyprpm enable hyprtasking
 ```
 
@@ -55,7 +56,7 @@ Add hyprtasking to your flake inputs
     hyprland.url = "github:hyprwm/Hyprland/v0.49.0";
 
     hyprtasking = {
-      url = "github:raybbian/hyprtasking";
+      url = "github:mscharstrom/hyprtasking";
       inputs.hyprland.follows = "hyprland";
     };
   };

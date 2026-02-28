@@ -2,6 +2,7 @@
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/DesktopTypes.hpp>
+#include <hyprland/src/helpers/time/Time.hpp>
 #include <hyprland/src/render/Renderer.hpp>
 #include <hyprutils/math/Box.hpp>
 
@@ -9,7 +10,7 @@ typedef void (*render_workspace_t)(
     void* thisptr,
     PHLMONITOR pMonitor,
     PHLWORKSPACE pWorkspace,
-    timespec* now,
+    const Time::steady_tp& now,
     const CBox& geometry
 );
 
@@ -19,7 +20,7 @@ typedef void (*render_window_t)(
     void* thisptr,
     PHLWINDOW pWindow,
     PHLMONITOR pMonitor,
-    timespec* time,
+    const Time::steady_tp& time,
     bool decorate,
     eRenderPassMode mode,
     bool ignorePosition,

@@ -1,15 +1,23 @@
 #include <linux/input-event-codes.h>
 
 #include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/layout/LayoutManager.hpp>
 #include <hyprland/src/macros.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
-#include <hyprland/src/managers/LayoutManager.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
 
 #include "config.hpp"
 #include "manager.hpp"
 #include "overview.hpp"
+
+static PHLWINDOW get_dragged_window() {
+    if (!g_layoutManager)
+        return nullptr;
+
+    const auto target = g_layoutManager->dragController()->target();
+    return target ? target->window() : nullptr;
+}
 
 bool HTManager::start_window_drag() {
     const PHLMONITOR cursor_monitor = g_pCompositor->getMonitorFromCursor();
@@ -43,9 +51,9 @@ bool HTManager::start_window_drag() {
     g_pKeybindManager->changeMouseBindMode(MBIND_MOVE);
     g_pPointerManager->warpTo(mouse_coords);
 
-    const PHLWINDOW dragged_window = g_pInputManager->m_currentlyDraggedWindow.lock();
+    const PHLWINDOW dragged_window = get_dragged_window();
     if (dragged_window != nullptr) {
-        if (dragged_window->m_draggingTiled) {
+        if (g_layoutManager->dragController()->draggingTiled()) {
             const Vector2D pre_pos = cursor_view->layout->local_ws_unscaled_to_global(
                 dragged_window->m_realPosition->value() - dragged_window->m_monitor->m_position,
                 workspace_id
@@ -94,8 +102,8 @@ bool HTManager::end_window_drag() {
 
     // If not dragging window or drag is not move, then we just let go (supposed to prevent it
     // from messing up resize on border, but it should be good because above?)
-    const PHLWINDOW dragged_window = g_pInputManager->m_currentlyDraggedWindow.lock();
-    if (dragged_window == nullptr || g_pInputManager->m_dragMode != MBIND_MOVE) {
+    const PHLWINDOW dragged_window = get_dragged_window();
+    if (dragged_window == nullptr || g_layoutManager->dragController()->mode() != MBIND_MOVE) {
         g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
         return false;
     }

@@ -1,6 +1,5 @@
 #include "render.hpp"
 
-#include <ctime>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/config/ConfigValue.hpp>
 #include <hyprland/src/desktop/DesktopTypes.hpp>
@@ -14,8 +13,13 @@
 #include "types.hpp"
 
 // Note: box is relative to (0, 0), not monitor
-void render_window_at_box(PHLWINDOW window, PHLMONITOR monitor, timespec* time, CBox box) {
-    if (!window || !monitor || !time)
+void render_window_at_box(
+    PHLWINDOW window,
+    PHLMONITOR monitor,
+    const Time::steady_tp& time,
+    CBox box
+) {
+    if (!window || !monitor)
         return;
 
     box.x -= monitor->m_position.x;

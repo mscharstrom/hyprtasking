@@ -1,11 +1,12 @@
 #include "grid.hpp"
 
-#include <ctime>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/config/ConfigValue.hpp>
 #include <hyprland/src/desktop/DesktopTypes.hpp>
 #include <hyprland/src/helpers/AnimatedVariable.hpp>
+#include <hyprland/src/helpers/time/Time.hpp>
+#include <hyprland/src/layout/LayoutManager.hpp>
 #include <hyprland/src/managers/animation/AnimationManager.hpp>
 #include <hyprland/src/managers/animation/DesktopAnimationManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
@@ -23,6 +24,14 @@
 #include "../types.hpp"
 
 using Hyprutils::Utils::CScopeGuard;
+
+static PHLWINDOW get_dragged_window() {
+    if (!g_layoutManager)
+        return nullptr;
+
+    const auto target = g_layoutManager->dragController()->target();
+    return target ? target->window() : nullptr;
+}
 
 HTLayoutGrid::HTLayoutGrid(VIEWID new_view_id) : HTLayoutBase(new_view_id) {
     g_pAnimationManager->createAnimation(
@@ -185,7 +194,7 @@ bool HTLayoutGrid::should_render_window(PHLWINDOW window) {
     if (window == nullptr || monitor == nullptr)
         return ori_result;
 
-    if (window == g_pInputManager->m_currentlyDraggedWindow.lock())
+    if (window == get_dragged_window())
         return false;
 
     PHLWORKSPACE workspace = window->m_workspace;
@@ -311,8 +320,7 @@ void HTLayoutGrid::render() {
 
     const float BORDERSIZE = HTConfig::value<Hyprlang::FLOAT>("border_size");
 
-    timespec time;
-    clock_gettime(CLOCK_MONOTONIC, &time);
+    const auto time = Time::steadyNow();
 
     g_pHyprRenderer->damageMonitor(monitor);
     g_pHyprOpenGL->m_renderData.pCurrentMonData->blurFBShouldRender = true;
@@ -384,7 +392,7 @@ void HTLayoutGrid::render() {
                 g_pHyprRenderer.get(),
                 monitor,
                 workspace,
-                &time,
+                time,
                 render_box
             );
 
@@ -401,7 +409,7 @@ void HTLayoutGrid::render() {
                 g_pHyprRenderer.get(),
                 monitor,
                 workspace,
-                &time,
+                time,
                 render_box
             );
         }
@@ -442,7 +450,7 @@ void HTLayoutGrid::render() {
                 g_pHyprRenderer.get(),
                 monitor,
                 start_workspace,
-                &time,
+                time,
                 render_box
             );
         }
@@ -451,7 +459,7 @@ void HTLayoutGrid::render() {
     const PHTVIEW cursor_view = ht_manager->get_view_from_cursor();
     if (cursor_view == nullptr)
         return;
-    const PHLWINDOW dragged_window = g_pInputManager->m_currentlyDraggedWindow.lock();
+    const PHLWINDOW dragged_window = get_dragged_window();
     if (dragged_window == nullptr)
         return;
     const Vector2D mouse_coords = g_pInputManager->getMouseCoordsInternal();
@@ -460,5 +468,5 @@ void HTLayoutGrid::render() {
                                 .scale(cursor_view->layout->drag_window_scale())
                                 .translate(mouse_coords);
     if (!window_box.intersection(monitor->logicalBox()).empty())
-        render_window_at_box(dragged_window, monitor, &time, window_box);
+        render_window_at_box(dragged_window, monitor, time, window_box);
 }
