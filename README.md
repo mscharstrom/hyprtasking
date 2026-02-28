@@ -6,6 +6,7 @@
 > [!Important]
 > - This fork supports Hyprland releases `v0.46.2-v0.54.0`.
 > - Hyprland `v0.54.0` compatibility is provided by this fork at `mscharstrom/hyprtasking`.
+> - This repository is a fork of `raymondbian/hyprtasking` and remains distributed under the BSD-3-Clause license. See [LICENSE](./LICENSE).
 
 > [!Note]
 > This repository is a personal fork used for development, testing, and local workflow changes.
